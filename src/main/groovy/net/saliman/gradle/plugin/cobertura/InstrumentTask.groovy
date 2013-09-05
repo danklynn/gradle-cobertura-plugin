@@ -50,18 +50,18 @@ class InstrumentTask extends DefaultTask {
 
 
 		// set the auxiliary classpath to the current classpath plus jars in the lib dir plus classes in the output dir.
-		// AKA current classpath + compileClasspath + compileClassPath
-		//	    <path id="cobertura.auxpath">
-//	    <pathelement path="${classpath}"/>
-//	    <fileset dir="lib">
-//	    <include name="**/*.jar"/>
-//	    </fileset>
-//	    <pathelement location="classes"/>
-//	    </path>
+		// AKA current classpath + compileClasspath + compileClassPath 
+		
 		String auxiliaryClasspath =	project.sourceSets.main.output.classesDir.path +
 						":" + project.sourceSets.main.compileClasspath.getAsPath()
-
-
+		
+		if (project.rootProject?.subprojects) {
+			def instrumentedDependencies = [] as Set
+			project.rootProject.subprojects.each {
+				instrumentedDependencies.addAll(it.sourceSets.test.compileClasspath.getAsPath().split(":"))
+			}
+			auxiliaryClasspath += ":" + instrumentedDependencies.join(":")
+		}
 
 		runner.instrument null, getDatafile().path, getDestinationDir()?.path,
 						configuration.coverageIgnores as List,
